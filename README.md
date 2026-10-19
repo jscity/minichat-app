@@ -25,6 +25,7 @@ SwiftUI，iOS 26+，零第三方依赖，xcodegen 生成工程（`MiniChat.xcode
 cd ios/MiniChat
 ./ios_install.sh          # 构建 Release、用临时 UDID 证书签名、装到已配对的 iPhone
 ./ios_install.sh --ota    # 改为发布到 https://apps.home.xtvv.com
+MINICHAT_VARIANT=xiaoxi ./ios_install.sh --ota   # xiaoxi 的手机：她的证书、Bundle ID com.xtvv.minichat.xiaoxi
 python3 tools/make_sounds.py                      # 重新生成音效
 swift tools/make_icon.swift Sources/Assets.xcassets/AppIcon.appiconset/icon.png   # 重新生成图标
 ```

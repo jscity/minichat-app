@@ -46,7 +46,7 @@ MacBook（开发）                     Mac mini（局域网服务器）
 - 新域名：`ai.home.xtvv.com`。OTA（`itms-services://`）要求 HTTPS，且设备必须信任该证书；若使用自签名 CA，家人设备需要安装并在「证书信任设置」里完全信任。App 访问 API 同理（ATS）。
 - 签名和 OTA 打包流程以用户现有脚本为准，不要另起一套。
 - iOS：SwiftUI，最低 iOS 26（本机中文识别 `SpeechAnalyzer` 需要），本地缓存用一个 JSON 文件（同「取件码」），`URLSession.bytes` 读 SSE。界面、音效和语音手势沿用「取件码」的 Pip-Boy 风格（源码 `~/Documents/哔哔小子/ios/Pickup`）：默认语音输入，打字是备选。
-- 签名与安装：`ios/MiniChat/ios_install.sh`（直装已配对 iPhone）/ `--ota`（发布到 apps.home.xtvv.com），证书为临时 UDID 证书，只有描述文件里登记的设备能装。
+- 签名与安装：`ios/MiniChat/ios_install.sh`（直装已配对 iPhone）/ `--ota`（发布到 apps.home.xtvv.com），证书为临时 UDID 证书，只有描述文件里登记的设备能装。xiaoxi 的手机用她自己的证书：`MINICHAT_VARIANT=xiaoxi ./ios_install.sh --ota`（Bundle ID `com.xtvv.minichat.xiaoxi`）。
 
 ## 旧系统：不要动
 

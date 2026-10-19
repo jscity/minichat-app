@@ -3,12 +3,26 @@
 # 加 --ota 则改为发布到 https://apps.home.xtvv.com（服务器管理/30_应用服务/app-distribution）。
 # 证书默认读取 服务器管理/99_敏感资料_不进同步/临时UDID证书-至2027-10-09/（用途见该目录 README）；
 # 也可用 MINICHAT_P12、MINICHAT_P12_PASSWORD、MINICHAT_PROFILE 覆盖。证书与密码不入库。
+# MINICHAT_VARIANT=xiaoxi：用「xiaoxi的UDID证书」签名、Bundle ID 改为 com.xtvv.minichat.xiaoxi，只能 --ota
+#   （她的手机没有配对到这台电脑；单独的 Bundle ID 让安装页上两人的版本分开列、互不挤掉）。
 # 签名身份放在单独的临时钥匙串，不改登录钥匙串。做法与 玄武计划/apps/ios/Anchor/ios_install.sh 相同。
 set -eu
 MODE=${1:-device}
 OTA_PUBLISH=${OTA_PUBLISH:-"$HOME/Documents/服务器管理/30_应用服务/app-distribution/ota-publish.sh"}
 cd "$(dirname "$0")"
-CERT_DIR=${MINICHAT_CERT_DIR:-"$HOME/Documents/服务器管理/99_敏感资料_不进同步/临时UDID证书-至2027-10-09"}
+SECRETS="$HOME/Documents/服务器管理/99_敏感资料_不进同步"
+case "${MINICHAT_VARIANT:-}" in
+  "")
+    DEFAULT_CERT_DIR="$SECRETS/临时UDID证书-至2027-10-09"
+    BUNDLE_ID=com.xtvv.minichat ;;
+  xiaoxi)
+    [ "$MODE" = "--ota" ] || { echo "xiaoxi 版只能用 --ota 发布" >&2; exit 1; }
+    DEFAULT_CERT_DIR="$SECRETS/xiaoxi的UDID证书"
+    BUNDLE_ID=com.xtvv.minichat.xiaoxi
+    OTA_NOTE=${OTA_NOTE:-"xiaoxi 的手机专用"} ;;
+  *) echo "未知的 MINICHAT_VARIANT：$MINICHAT_VARIANT" >&2; exit 1 ;;
+esac
+CERT_DIR=${MINICHAT_CERT_DIR:-$DEFAULT_CERT_DIR}
 MINICHAT_P12=${MINICHAT_P12:-"$CERT_DIR/证书文件.p12"}
 MINICHAT_PROFILE=${MINICHAT_PROFILE:-"$CERT_DIR/描述文件.mobileprovision"}
 # 密码.txt 可能写成「密码：xxx」，只取冒号后的部分。
@@ -21,7 +35,8 @@ trap 'security delete-keychain "$KC" 2>/dev/null; rm -rf "$WORK"' EXIT
 
 xcodegen generate >/dev/null
 xcodebuild -project MiniChat.xcodeproj -scheme MiniChat -destination 'generic/platform=iOS' -configuration Release \
-  -derivedDataPath build build CODE_SIGNING_ALLOWED=NO -quiet CURRENT_PROJECT_VERSION="$(date +%Y%m%d%H%M)"
+  -derivedDataPath build build CODE_SIGNING_ALLOWED=NO -quiet CURRENT_PROJECT_VERSION="$(date +%Y%m%d%H%M)" \
+  PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID"
 APP=build/Build/Products/Release-iphoneos/MiniChat.app
 
 # 旧版 p12 用 RC2 加密，macOS security 无法导入，先用 openssl 转码。
@@ -34,7 +49,7 @@ security import "$WORK/conv.p12" -k "$KC" -P minichat -T /usr/bin/codesign >/dev
 security set-key-partition-list -S apple-tool:,apple: -s -k minichat "$KC" >/dev/null
 IDENTITY=$(security find-identity -v -p codesigning "$KC" | awk 'NR==1{print $2}')
 
-# 用描述文件的权限签名，保留自己的 Bundle ID（com.xtvv.minichat），不会覆盖同证书的其他 App。
+# 用描述文件的权限签名，保留自己的 Bundle ID，不会覆盖同证书的其他 App。
 security cms -D -i "$MINICHAT_PROFILE" > "$WORK/profile.plist"
 /usr/libexec/PlistBuddy -x -c "Print :Entitlements" "$WORK/profile.plist" > "$WORK/ent.plist"
 cp "$MINICHAT_PROFILE" "$APP/embedded.mobileprovision"
