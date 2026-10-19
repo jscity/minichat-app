@@ -29,6 +29,13 @@ export function buildHistory(rows, { maxMessages, maxChars }) {
   return merged;
 }
 
+// 固定提示词末尾追加当天日期，让模型回答「今天几号、星期几」这类问题时不出错。
+export function systemWithDate(base, date = new Date(), timeZone = 'Asia/Shanghai') {
+  const day = new Intl.DateTimeFormat('zh-CN', { timeZone, year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }).format(date);
+  const zone = timeZone === 'Asia/Shanghai' ? '北京时间' : timeZone;
+  return `${base}\n\n今天是 ${day}（${zone}）。`;
+}
+
 export function fallbackTitle(content) {
   const oneLine = content.replace(/\s+/g, ' ').trim();
   return Array.from(oneLine).slice(0, TITLE_FALLBACK_CHARS).join('') || '新对话';
@@ -154,7 +161,7 @@ export class ChatService {
       const result = await streamCompletion({
         tier,
         providerConfig: this.config.providers[tier.provider],
-        system: this.config.systemPrompt,
+        system: systemWithDate(this.config.systemPrompt, new Date(), this.config.timeZone),
         messages: history,
         signal: controller.signal,
         fetchImpl: this.fetchImpl,

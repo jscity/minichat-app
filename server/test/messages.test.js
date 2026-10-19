@@ -24,7 +24,10 @@ function send(convId, content, clientMessageId, extra = {}, opts = {}) {
   return app.stream(`/api/conversations/${convId}/messages`, { content, clientMessageId, ...extra }, opts);
 }
 
-const chatRequests = () => mock.requests.filter((r) => r.body.messages?.[0]?.content === SYSTEM_PROMPT || r.body.systemInstruction?.parts?.[0]?.text === SYSTEM_PROMPT);
+const isChatSystem = (text) => typeof text === 'string' && text.startsWith(SYSTEM_PROMPT);
+const chatRequests = () => mock.requests.filter((r) => isChatSystem(r.body.messages?.[0]?.content) || isChatSystem(r.body.systemInstruction?.parts?.[0]?.text));
+// 历史里的消息内容（去掉第一条带日期的系统提示词）
+const sentContents = (req) => req.body.messages.slice(1).map((m) => m.content);
 
 test('流式回复：事件顺序、正文、落库、上游请求格式', async () => {
   const conv = await newConversation();
@@ -51,10 +54,9 @@ test('流式回复：事件顺序、正文、落库、上游请求格式', async
   assert.equal(upstream.body.stream, true);
   assert.equal(upstream.body.reasoning_effort, 'low');
   assert.equal(upstream.body.max_completion_tokens, 4096);
-  assert.deepEqual(upstream.body.messages, [
-    { role: 'system', content: SYSTEM_PROMPT },
-    { role: 'user', content: '红烧肉怎么做？' }
-  ]);
+  assert.equal(upstream.body.messages[0].role, 'system');
+  assert.match(upstream.body.messages[0].content, new RegExp(`^${SYSTEM_PROMPT}\\n\\n今天是 \\d{4}年\\d{1,2}月\\d{1,2}日星期.（北京时间）。$`));
+  assert.deepEqual(upstream.body.messages.slice(1), [{ role: 'user', content: '红烧肉怎么做？' }]);
 
   await app.settle(conv.id);
   const detail = (await app.api('GET', `/api/conversations/${conv.id}`)).body;
@@ -236,7 +238,7 @@ test('回复被长度截断：finishReason = length（CC 和 Gemini）', async (
   assert.equal(geminiRequest.url, '/v1beta/models/gemini-3.8-flash:streamGenerateContent?alt=sse');
   assert.equal(geminiRequest.headers['x-goog-api-key'], 'gg-test-key');
   assert.deepEqual(geminiRequest.body.generationConfig, { maxOutputTokens: 4096, thinkingConfig: { thinkingLevel: 'low' } });
-  assert.equal(geminiRequest.body.systemInstruction.parts[0].text, SYSTEM_PROMPT);
+  assert.ok(isChatSystem(geminiRequest.body.systemInstruction.parts[0].text));
   assert.deepEqual(geminiRequest.body.contents.map((c) => c.role), ['user', 'model', 'user']);
 
   const saved = (await app.api('GET', `/api/conversations/${conv.id}`)).body.messages.at(-1);
@@ -255,21 +257,18 @@ test('历史消息按条数和字符数裁剪，当前消息总在', async () =>
     await app.settle(conv.id);
   }
   // 条数上限 4：答2 问3 答3 问4，去掉开头的助手消息后为 问3 答3 问4
-  let sent = mock.requests.at(-1).body.messages;
-  assert.deepEqual(sent.map((m) => m.content), [SYSTEM_PROMPT, '问3', '答3', '问4']);
+  assert.deepEqual(sentContents(mock.requests.at(-1)), ['问3', '答3', '问4']);
 
   // 字符上限 30：一条长消息挤掉更早的历史，但当前消息即使很长也保留
   mock.queue.push((req, res) => ccStream(res, ['好']));
   await send(conv.id, '长'.repeat(28), 'c5');
   await app.settle(conv.id);
-  sent = mock.requests.at(-1).body.messages;
-  assert.deepEqual(sent.map((m) => m.content), [SYSTEM_PROMPT, '长'.repeat(28)]);
+  assert.deepEqual(sentContents(mock.requests.at(-1)), ['长'.repeat(28)]);
 
   mock.queue.push((req, res) => ccStream(res, ['好']));
   await send(conv.id, '超'.repeat(50), 'c6');
   await app.settle(conv.id);
-  sent = mock.requests.at(-1).body.messages;
-  assert.deepEqual(sent.map((m) => m.content), [SYSTEM_PROMPT, '超'.repeat(50)]);
+  assert.deepEqual(sentContents(mock.requests.at(-1)), ['超'.repeat(50)]);
 });
 
 test('深入重答：用指定档位回答最后一条用户消息，替换原回答', async () => {

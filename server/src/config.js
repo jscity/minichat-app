@@ -48,6 +48,7 @@ export function loadConfig(env = process.env) {
     historyMaxMessages: int(env.HISTORY_MAX_MESSAGES, 24),
     historyMaxChars: int(env.HISTORY_MAX_CHARS, 24000),
     upstreamTimeoutMs: int(env.UPSTREAM_TIMEOUT_MS, 120000),
+    timeZone: env.TIME_ZONE || 'Asia/Shanghai',
     pingIntervalMs: int(env.SSE_PING_MS, 15000)
   };
 }

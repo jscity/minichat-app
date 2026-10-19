@@ -108,3 +108,20 @@ node --env-file=.env bench/ttft.mjs --runs 3 --only cc-sol-medium,cc-6.1-sol-med
 
 - 「深入」档用 **`gpt-6.1-sol`，`reasoning_effort=medium`**。首字和 6 Sol 相当（p50 2.4 s，p90 5.2 s，比 6 Sol 的 7.0 s 更稳），回答篇幅约是 6 Sol 的两倍，更符合「深入」的定位。总耗时更长，这是篇幅更长的结果。
 - Gemini 4 Argon 首字 p50 8.6 s、p90 25.6 s，作为备选档太慢，不采用。Gemini 备选档用 `gemini-3.8-flash` + `thinkingLevel=low`。
+
+## 2026-10-19 · 人格：小红
+
+旧系统有 5 种人设，家里人最常用、也最喜欢红色的 SAVAGE。新系统只保留一个固定人格，以 SAVAGE 为基础重新设计。
+
+过程：起草三份提示词（`docs/persona/A-savage.md`、`B-companion.md`、`C-minimal.md`），用 8 个问题（身份、被骂、坏主意、爆粗、求吐槽、婚姻秘密、孩子发烧、做菜）在快速档和深入档各问一次，共 48 个回答（`results.json`，脚本 `bench/persona.mjs`）。
+
+| 结论 | 依据 |
+|---|---|
+| 选 B（SAVAGE + 陪伴者） | 情绪类问题差距最大：B 先接住人、不说教；A、C 容易直接给方案或教人怎么谈。正事上三者相当 |
+| 命名「小红」 | 家里人原来就这么叫，中文界面最自然；英文名备选 Ruby |
+| 放开情绪 | 原稿下两档都会先声明「没有真实感情」。改为「问感情就照此刻感受回答，不讲大道理；只有被认真问是不是真人时才坦白是 AI」。之后快速档会说「有，这份在意是真的」，深入档（6.1 Sol）更克制但不再说教，再压容易变假，停在这里 |
+| 日常问题尽量短 | 「在吗」→「在呢，怎么了？」；做法、健康、钱这类仍会展开 |
+| 末尾加当天日期 | 「今天星期几」能答对；日期放在末尾，不影响前缀缓存 |
+| 不提底层模型 | A、C 有时自称 ChatGPT，定稿明确不提公司和模型 |
+
+定稿：`server/prompts/system.md`（副本 `docs/persona/D-xiaohong.md`），验证结果 `docs/persona/results-final.json`。

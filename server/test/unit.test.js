@@ -6,7 +6,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { parseTier, loadConfig } from '../src/config.js';
-import { buildHistory, fallbackTitle } from '../src/chat.js';
+import { buildHistory, fallbackTitle, systemWithDate } from '../src/chat.js';
 import { parseChunk } from '../src/upstream.js';
 import { openDb } from '../src/db.js';
 
@@ -74,4 +74,10 @@ test('bin/add-user 打印 token，数据库只存哈希', () => {
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test('系统提示词末尾追加当天日期（按配置的时区）', () => {
+  const at = new Date('2026-10-18T17:30:00Z'); // 北京时间 10 月 19 日凌晨
+  assert.equal(systemWithDate('提示词', at), '提示词\n\n今天是 2026年10月19日星期一（北京时间）。');
+  assert.equal(systemWithDate('提示词', at, 'America/Los_Angeles'), '提示词\n\n今天是 2026年10月18日星期日（America/Los_Angeles）。');
 });

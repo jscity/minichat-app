@@ -249,7 +249,10 @@ CREATE INDEX idx_msg_conv_created ON messages(conversation_id, created_at);
 
 ## 系统提示词
 
-一个固定的默认提示词，放在 `server/prompts/system.md`，所有档位、所有用户共用，启动时读取。改它只需重启服务，不需要改接口或发版。第一版先用一个简单的提示词；人格（以旧系统 SAVAGE 风格为基础重新设计）在单独的「人格设计」阶段定稿，见 CLAUDE.md。
+一个固定的提示词，放在 `server/prompts/system.md`，所有档位、所有用户共用，启动时读取。改它只需重启服务，不需要改接口或发版。
+
+- 人格：「小红」，以旧系统 SAVAGE 为基础，加上陪伴者的部分（先接住情绪、可以表达感受、替对方保守秘密），日常问题尽量短。选型过程见 `docs/persona/` 和 [decisions.md](decisions.md)。
+- 每次请求时在末尾追加一行当天日期，例如「今天是 2026年10月19日星期一（北京时间）。」，时区由 `TIME_ZONE` 配置，默认 `Asia/Shanghai`。固定部分在前，日期在后，便于上游做前缀缓存。
 
 ## 服务端配置（环境变量）
 
@@ -270,6 +273,7 @@ TIER_GEMINI=gemini:gemini-3.8-flash:low:4096
 HISTORY_MAX_MESSAGES=24
 HISTORY_MAX_CHARS=24000
 UPSTREAM_TIMEOUT_MS=120000
+# TIME_ZONE=Asia/Shanghai        # 系统提示词里的「今天是…」按这个时区
 ```
 
 - CC 的推理强度写入 `reasoning_effort`，Gemini 的写入 `generationConfig.thinkingConfig.thinkingLevel`。
