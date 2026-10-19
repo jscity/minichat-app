@@ -1,0 +1,20 @@
+.DS_Store
+
+# 密钥与运行数据
+.env
+.env.*
+!.env.example
+data/
+*.db
+*.db-shm
+*.db-wal
+bench/results/
+
+# Node
+node_modules/
+
+# Xcode
+ios/**/xcuserdata/
+ios/**/DerivedData/
+*.ipa
+*.xcarchive
