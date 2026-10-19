@@ -87,3 +87,24 @@ node --env-file=.env bench/ttft.mjs --runs 3     # Node 22.22，10 个问题 × 
 2. **Gemini 3.8 变慢是因为思考强度。** 同一模型、同一链路，`low` 的 p50 是 1.6 s，默认强度是 5.8 s，30 次全部超过 3 秒。旧系统审计里 3.8 的 p50 是 8.1 s，量级与默认强度一致，再加上旧系统的长系统提示词和历史。旧系统是否真的给 3.8 发了 `low`，这次没有核实（不读它的 `.env`）。
 3. **Gemini 备选档可以用 3.8 low 替代 3.7 low**，两者速度相当（1.6 s / 1.7 s）。服务端配置里写 `thinkingLevel=low`。
 4. **Sol 在 `low` 下首字和 Luna 一样快**，旧系统 10 秒以上的耗时来自更高的推理强度。「深入」档用 Sol，推理强度在服务端配置，默认 `medium`，上线后以服务端记录的耗时为准再调。
+
+### 2026-10-19 补测 · 最新型号与「深入」档推理强度
+
+查询两家 `/v1/models`（同一把 key）：CC 新增 `gpt-6.1-sol`（2026-09-29 发布）；Luna 仍只有 `gpt-6-luna`。Gemini 新增 `gemini-4-argon`（2026-09-30 发布的旗舰模型，对应 Pro 级别，不是 Flash）；Flash 系列最新仍是 `gemini-3.8-flash`。
+
+```bash
+node --env-file=.env bench/ttft.mjs --runs 3 --only cc-sol-medium,cc-6.1-sol-medium,gg-4-argon-low
+```
+
+| 目标 | 模型 | 成功 | 首字 p50 | 首字 p90 | 首字最大 | 首字 >3s | 总耗时 p50 | 总耗时 p90 | 平均字数 |
+|---|---|---|---|---|---|---|---|---|---|
+| cc-sol-medium | gpt-6-sol (medium) | 30/30 | 2.0 s | 7.0 s | 8.4 s | 10 | 4.7 s | 8.8 s | 176 |
+| cc-6.1-sol-medium | gpt-6.1-sol (medium) | 30/30 | 2.4 s | 5.2 s | 8.2 s | 9 | 6.3 s | 18.5 s | 340 |
+| gg-4-argon-low | gemini-4-argon (low) | 29/30 | 8.6 s | 25.6 s | 44.0 s | 23 | 11.5 s | 30.4 s | 407 |
+
+原始数据：Mac mini `bench/results/2026-10-19T02-40-17-326Z.json`。Argon 有 1 次 90 秒超时。
+
+结论：
+
+- 「深入」档用 **`gpt-6.1-sol`，`reasoning_effort=medium`**。首字和 6 Sol 相当（p50 2.4 s，p90 5.2 s，比 6 Sol 的 7.0 s 更稳），回答篇幅约是 6 Sol 的两倍，更符合「深入」的定位。总耗时更长，这是篇幅更长的结果。
+- Gemini 4 Argon 首字 p50 8.6 s、p90 25.6 s，作为备选档太慢，不采用。Gemini 备选档用 `gemini-3.8-flash` + `thinkingLevel=low`。

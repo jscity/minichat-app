@@ -2,7 +2,10 @@
   { "id": "cc-luna", "provider": "cc", "model": "gpt-6-luna", "reasoningEffort": "low" },
   { "id": "cc-terra", "provider": "cc", "model": "gpt-5.6-terra", "reasoningEffort": "low" },
   { "id": "cc-sol", "provider": "cc", "model": "gpt-6-sol", "reasoningEffort": "low" },
+  { "id": "cc-sol-medium", "provider": "cc", "model": "gpt-6-sol", "reasoningEffort": "medium" },
+  { "id": "cc-6.1-sol-medium", "provider": "cc", "model": "gpt-6.1-sol", "reasoningEffort": "medium" },
   { "id": "gg-3.7-flash-low", "provider": "gemini", "model": "gemini-3.7-flash", "thinkingLevel": "low" },
   { "id": "gg-3.8-flash-default", "provider": "gemini", "model": "gemini-3.8-flash" },
-  { "id": "gg-3.8-flash-low", "provider": "gemini", "model": "gemini-3.8-flash", "thinkingLevel": "low" }
+  { "id": "gg-3.8-flash-low", "provider": "gemini", "model": "gemini-3.8-flash", "thinkingLevel": "low" },
+  { "id": "gg-4-argon-low", "provider": "gemini", "model": "gemini-4-argon", "thinkingLevel": "low" }
 ]
