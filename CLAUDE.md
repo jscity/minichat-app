@@ -87,7 +87,7 @@ deploy/   Mac mini 上的 compose / Caddy / OTA 配置示例（待建）
 
 ## 当前阶段
 
-- [ ] 1. 在 Mac mini 上跑 `bench/`，确定「快速」档模型，把结果补进 `docs/decisions.md`。
+- [x] 1. 在 Mac mini 上跑 `bench/`，确定「快速」档模型，把结果补进 `docs/decisions.md`。
 - [ ] 2. 用户确认 `docs/api.md` 草案。
 - [ ] 3. 服务端第一版：鉴权、会话 CRUD、流式消息、测试；部署到新域名并用 curl 验证。
 - [ ] 4. iOS 第一版：设置（服务器地址 + token）、会话列表、聊天、档位切换。

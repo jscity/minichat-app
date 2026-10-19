@@ -52,9 +52,38 @@
 
 ## 待定
 
-- 「快速」档用 Luna 还是 Terra：Luna 样本只有 1 个，需在 Mac mini 上跑 `bench/ttft.mjs` 后决定。结果补在下面。
-- Gemini 慢是模型 / 思考强度，还是网络中转：对比 bench 里 `headers_p50`（连接 + 首包）和 `first_p50`。
+- ~~「快速」档用 Luna 还是 Terra~~：已定 Luna，见下方 Bench 结果。
+- ~~Gemini 慢是模型 / 思考强度，还是网络中转~~：是思考强度，见下方 Bench 结果。
 
 ## Bench 结果
 
-（在 Mac mini 上运行后补充：日期、命令、结果表、结论。）
+### 2026-10-19 · Mac mini（家庭宽带，CC 走 CPA `api.4xia.win`，Gemini 直连官方）
+
+```bash
+cd /Users/macmini/services/minichat-app
+node --env-file=.env bench/ttft.mjs --runs 3     # Node 22.22，10 个问题 × 3 轮 × 6 个目标，串行，全部成功
+```
+
+条件：系统提示词一句话、单轮无历史、输出上限 1024 token；CC 的 `reasoning_effort` 都是 `low`。
+
+| 目标 | 模型 | 成功 | 首字 p50 | 首字 p90 | 首字最大 | 首字 >3s | 总耗时 p50 | 总耗时 p90 |
+|---|---|---|---|---|---|---|---|---|
+| cc-luna | gpt-6-luna (low) | 30/30 | 1.5 s | 2.6 s | 3.3 s | 2 | 3.8 s | 9.0 s |
+| cc-sol | gpt-6-sol (low) | 30/30 | 1.5 s | 2.6 s | 2.8 s | 0 | 4.4 s | 7.5 s |
+| gg-3.8-flash-low | gemini-3.8-flash (low) | 30/30 | 1.6 s | 2.1 s | 8.5 s | 2 | 3.6 s | 6.9 s |
+| gg-3.7-flash-low | gemini-3.7-flash (low) | 30/30 | 1.7 s | 2.3 s | 4.0 s | 1 | 3.7 s | 6.3 s |
+| cc-terra | gpt-5.6-terra (low) | 30/30 | 1.9 s | 6.0 s | 13.3 s | 7 | 6.9 s | 27.7 s |
+| gg-3.8-flash-default | gemini-3.8-flash（不传 thinkingLevel） | 30/30 | 5.8 s | 7.2 s | 8.6 s | 30 | 7.4 s | 10.0 s |
+
+说明：
+
+- 原计划的 `gemini-3.8-flash` + `thinkingLevel: minimal` 被接口拒绝（HTTP 400 “Thinking level MINIMAL is not supported for this model”），换成「不传 thinkingLevel」（模型默认思考强度）做对照。
+- 两家上游都在第一个正文到达时才返回响应头（`headers_p50` 与 `first_p50` 相同，差值 ≤ 62 ms），所以这个指标分不出网络开销和模型耗时。不过同一条链路上 3.8 low 和 3.8 默认相差约 4 秒，足以说明差别来自模型本身。
+- 原始数据在 Mac mini 的 `bench/results/2026-10-19T01-28-15-869Z.json`（不进 Git）。
+
+### 结论
+
+1. **「快速」档用 Luna（`gpt-6-luna`，`reasoning_effort=low`）。** 首字 p50 1.5 s、p90 2.6 s，30 次中只有 2 次超过 3 秒。Terra 的 p50 接近（1.9 s），但长尾明显：p90 6.0 s，最慢 13.3 s，总耗时 p90 27.7 s。
+2. **Gemini 3.8 变慢是因为思考强度。** 同一模型、同一链路，`low` 的 p50 是 1.6 s，默认强度是 5.8 s，30 次全部超过 3 秒。旧系统审计里 3.8 的 p50 是 8.1 s，量级与默认强度一致，再加上旧系统的长系统提示词和历史。旧系统是否真的给 3.8 发了 `low`，这次没有核实（不读它的 `.env`）。
+3. **Gemini 备选档可以用 3.8 low 替代 3.7 low**，两者速度相当（1.6 s / 1.7 s）。服务端配置里写 `thinkingLevel=low`。
+4. **Sol 在 `low` 下首字和 Luna 一样快**，旧系统 10 秒以上的耗时来自更高的推理强度。「深入」档用 Sol，推理强度在服务端配置，默认 `medium`，上线后以服务端记录的耗时为准再调。
