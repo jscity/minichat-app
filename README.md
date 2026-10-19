@@ -17,6 +17,20 @@ npm test                                            # 模拟上游，不消耗�
 node --env-file=../.env --disable-warning=ExperimentalWarning src/server.js   # 监听 :8790
 ```
 
+## iOS App「小红」（ios/MiniChat）
+
+SwiftUI，iOS 26+，零第三方依赖，xcodegen 生成工程（`MiniChat.xcodeproj` 不进 Git）。风格、音效、语音手势沿用「取件码」。
+
+```bash
+cd ios/MiniChat
+./ios_install.sh          # 构建 Release、用临时 UDID 证书签名、装到已配对的 iPhone
+./ios_install.sh --ota    # 改为发布到 https://apps.home.xtvv.com
+python3 tools/make_sounds.py                      # 重新生成音效
+swift tools/make_icon.swift Sources/Assets.xcassets/AppIcon.appiconset/icon.png   # 重新生成图标
+```
+
+模拟器调试（仅 Debug 构建）：启动参数 `-debugOpen <会话id>`、`-debugSend <文字>`、`-debugShow list|settings|typing`；服务器地址和 token 用 `xcrun simctl spawn <设备> defaults write com.xtvv.minichat serverURL|token …` 写入。
+
 ## 测速（bench）
 
 在 Mac mini 上运行，使用真实的 key 和网络链路，结果才有参考价值。需要 Node 20.6 或更高版本，无需安装依赖。

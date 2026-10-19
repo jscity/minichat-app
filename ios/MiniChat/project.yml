@@ -1,0 +1,41 @@
+name: MiniChat
+options:
+  bundleIdPrefix: com.xtvv
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+  developmentLanguage: zh-Hans
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  MiniChat:
+    type: application
+    platform: iOS
+    sources: [Sources]
+    info:
+      path: Sources/Info.plist
+      properties:
+        CFBundleDisplayName: 小红
+        CFBundleDevelopmentRegion: zh-Hans
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIUserInterfaceStyle: Dark
+        MiniChatServer: https://ai.home.xtvv.com
+        NSMicrophoneUsageDescription: 按住说话时把你的话转成文字发给小红，识别在手机本机完成。
+        NSSpeechRecognitionUsageDescription: 在手机本机把语音转成文字，作为聊天消息发送。
+        NSLocalNetworkUsageDescription: 连接家里 Mac mini 上的聊天服务。
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.xtvv.minichat
+        PRODUCT_NAME: MiniChat
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_STYLE: Manual

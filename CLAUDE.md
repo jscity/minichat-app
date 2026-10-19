@@ -45,7 +45,8 @@ MacBook（开发）                     Mac mini（局域网服务器）
 
 - 新域名：`ai.home.xtvv.com`。OTA（`itms-services://`）要求 HTTPS，且设备必须信任该证书；若使用自签名 CA，家人设备需要安装并在「证书信任设置」里完全信任。App 访问 API 同理（ATS）。
 - 签名和 OTA 打包流程以用户现有脚本为准，不要另起一套。
-- iOS：SwiftUI，最低 iOS 17，SwiftData 做本地缓存，`Speech` 框架做中文语音识别（优先本地识别），`URLSession.bytes` 读 SSE。
+- iOS：SwiftUI，最低 iOS 26（本机中文识别 `SpeechAnalyzer` 需要），本地缓存用一个 JSON 文件（同「取件码」），`URLSession.bytes` 读 SSE。界面、音效和语音手势沿用「取件码」的 Pip-Boy 风格（源码 `~/Documents/哔哔小子/ios/Pickup`）：默认语音输入，打字是备选。
+- 签名与安装：`ios/MiniChat/ios_install.sh`（直装已配对 iPhone）/ `--ota`（发布到 apps.home.xtvv.com），证书为临时 UDID 证书，只有描述文件里登记的设备能装。
 
 ## 旧系统：不要动
 
@@ -73,7 +74,7 @@ MacBook（开发）                     Mac mini（局域网服务器）
 bench/    首字耗时测速脚本（零依赖）
 docs/     决策记录、接口定义
 server/   后端（Node 24 零依赖，见 README）
-ios/      iOS App（待建）
+ios/      iOS App「小红」（ios/MiniChat，xcodegen）
 deploy/   Mac mini 部署说明与 Caddy 配置片段（compose 在仓库根目录）
 ```
 
@@ -91,5 +92,5 @@ deploy/   Mac mini 部署说明与 Caddy 配置片段（compose 在仓库根目�
 - [x] 2. 用户确认 `docs/api.md`，定稿为 v1（删除 = 直接删除 + 归档；深入重答替换原回答；一个固定系统提示词；域名 `ai.home.xtvv.com`）。
 - [x] 3. 服务端第一版：鉴权、会话增删改查与归档、分类、档位、流式消息、深入重答、自动标题、`bin/add-user`、33 个测试。2026-10-19 已部署到 `https://ai.home.xtvv.com`（Mac mini `/Users/macmini/services/minichat-app`，容器 `minichat-app`），HTTPS 流式验证通过。
 - [x] 4. 人格设计：三份草稿对比后选定 B（SAVAGE + 陪伴者），命名「小红」，放开情绪表达，日常问题尽量短；系统提示词末尾自动加当天日期。过程见 `docs/persona/`、`docs/decisions.md`。
-- [ ] 5. iOS 第一版：设置（服务器地址 + token）、会话列表、聊天、档位切换。
-- [ ] 6. 语音输入、分类 / 置顶 / 搜索界面、深入重答按钮。
+- [x] 5. iOS 第一版「小红」（2026-10-19）：设置（粘贴服务器地址 + token）、会话列表（置顶 / 改名 / 归档 / 删除）、聊天、档位切换、深入重答、语音输入（按住说话松开发送、上滑取消、双击连续说）、打字备选。已直装并 OTA 发布。
+- [ ] 6. 分类和搜索界面、归档列表；真机试用后的调整。
