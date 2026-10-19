@@ -6,6 +6,17 @@
 - 决策记录与旧系统数据：[docs/decisions.md](docs/decisions.md)
 - 接口与数据结构：[docs/api.md](docs/api.md)
 
+## 服务端（server）
+
+零依赖：Node 24（`node:http`、`node:sqlite`、`node:test`）。接口见 [docs/api.md](docs/api.md)，部署见 [deploy/README.md](deploy/README.md)。
+
+```bash
+cd server
+npm test                                            # 模拟上游，不消耗额度
+./bin/add-user 测试                                  # 本地建用户，打印 token
+node --env-file=../.env --disable-warning=ExperimentalWarning src/server.js   # 监听 :8790
+```
+
 ## 测速（bench）
 
 在 Mac mini 上运行，使用真实的 key 和网络链路，结果才有参考价值。需要 Node 20.6 或更高版本，无需安装依赖。

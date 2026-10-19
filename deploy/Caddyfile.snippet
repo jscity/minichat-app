@@ -1,0 +1,12 @@
+# 加到 /opt/homebrew/etc/Caddyfile 的 *.home.xtvv.com { … } 站点块里，和 @pickup、@chat 等并列。
+# 修改前先备份：cp /opt/homebrew/etc/Caddyfile /opt/homebrew/etc/Caddyfile.bak-$(date +%Y%m%d%H%M%S)-ai
+# 检查并重载：caddy validate --config /opt/homebrew/etc/Caddyfile && caddy reload --config /opt/homebrew/etc/Caddyfile
+
+	@ai host ai.home.xtvv.com
+	handle @ai {
+		# flush_interval -1：SSE 每段文字立即转发，不缓冲。
+		# 服务端响应带 Cache-Control: no-transform，common 里的 encode 不会压缩流式回复。
+		reverse_proxy 127.0.0.1:8790 {
+			flush_interval -1
+		}
+	}

@@ -1,0 +1,26 @@
+#!/usr/bin/env node
+// 新增家庭成员并打印 token（只显示这一次，数据库里只存哈希）。
+// 用法：bin/add-user <名字>      数据库路径取 DB_PATH，默认 server/data/minichat.db
+//   容器内：docker compose exec minichat-app bin/add-user 爸爸
+
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const name = process.argv.slice(2).join(' ').trim();
+if (!name) {
+  console.error('用法：bin/add-user <名字>');
+  process.exit(1);
+}
+
+// node:sqlite 仍会打印实验特性警告，这里静默掉。
+process.removeAllListeners('warning');
+const { openDb } = await import('../src/db.js');
+
+const serverDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const store = openDb(process.env.DB_PATH || path.join(serverDir, 'data', 'minichat.db'));
+const { user, token } = store.createUser(name);
+store.close();
+
+console.log(`已添加：${user.name}（${user.id}）`);
+console.log(`token：${token}`);
+console.log('请把 token 填进 App 设置；它不会再次显示。');

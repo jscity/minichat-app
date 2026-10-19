@@ -1,0 +1,41 @@
+# Mac mini 部署：/Users/macmini/services/minichat-app
+#   docker compose up -d --build
+# 新增家庭成员：docker compose exec minichat-app bin/add-user <名字>
+name: minichat-app
+
+services:
+  minichat-app:
+    build: ./server
+    container_name: minichat-app
+    restart: unless-stopped
+    init: true
+    user: "501:20"
+    env_file: .env
+    environment:
+      HOST: 0.0.0.0
+      PORT: "8790"
+      DB_PATH: /app/data/minichat.db
+    ports:
+      - "127.0.0.1:8790:8790"
+    volumes:
+      - ./data:/app/data
+      # 系统提示词放在宿主机，改完 docker compose restart 即可生效
+      - ./server/prompts:/app/prompts:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    cpus: 0.5
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8790/healthz').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

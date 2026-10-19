@@ -72,9 +72,9 @@ MacBook（开发）                     Mac mini（局域网服务器）
 ```
 bench/    首字耗时测速脚本（零依赖）
 docs/     决策记录、接口定义
-server/   后端（待建）
+server/   后端（Node 24 零依赖，见 README）
 ios/      iOS App（待建）
-deploy/   Mac mini 上的 compose / Caddy / OTA 配置示例（待建）
+deploy/   Mac mini 部署说明与 Caddy 配置片段（compose 在仓库根目录）
 ```
 
 ## 开发约定
@@ -89,7 +89,7 @@ deploy/   Mac mini 上的 compose / Caddy / OTA 配置示例（待建）
 
 - [x] 1. 在 Mac mini 上跑 `bench/`，确定「快速」档模型，把结果补进 `docs/decisions.md`。
 - [x] 2. 用户确认 `docs/api.md`，定稿为 v1（删除 = 直接删除 + 归档；深入重答替换原回答；一个固定系统提示词；域名 `ai.home.xtvv.com`）。
-- [ ] 3. 服务端第一版：鉴权、会话增删改查与归档、分类、档位、流式消息、深入重答、自动标题、`bin/add-user`、测试；本机 curl 走通；写好 Docker / Caddy 配置。经用户确认后部署到 `ai.home.xtvv.com`。
+- [ ] 3. 服务端第一版（代码、测试、本机 curl、Docker 已完成，待部署）：鉴权、会话增删改查与归档、分类、档位、流式消息、深入重答、自动标题、`bin/add-user`、测试；本机 curl 走通；写好 Docker / Caddy 配置。经用户确认后部署到 `ai.home.xtvv.com`。
 - [ ] 4. 人格设计：只读参考旧系统 SOUL / SAVAGE 原文，起草 2–3 个精简版系统提示词，用同一组问题在快速档和深入档上对比，用户选定后写入 `server/prompts/system.md`。
 - [ ] 5. iOS 第一版：设置（服务器地址 + token）、会话列表、聊天、档位切换。
 - [ ] 6. 语音输入、分类 / 置顶 / 搜索界面、深入重答按钮。
