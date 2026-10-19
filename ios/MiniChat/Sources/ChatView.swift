@@ -7,6 +7,7 @@ struct ChatView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var voice = VoiceControl()
     @State private var showList = false
+    @State private var listStartsArchived = false
     @State private var showSettings = false
     @State private var typing = false
     @State private var draft = ""
@@ -28,7 +29,7 @@ struct ChatView: View {
             }
             CRTOverlay()
         }
-        .fullScreenCover(isPresented: $showList) { ConversationListView() }
+        .fullScreenCover(isPresented: $showList, onDismiss: { listStartsArchived = false }) { ConversationListView(archived: listStartsArchived) }
         .fullScreenCover(isPresented: $showSettings) { SettingsView() }
         .onAppear {
             voice.onSubmit = { text in
@@ -41,12 +42,15 @@ struct ChatView: View {
         .task {
             await store.refresh()
             #if DEBUG
-            // 模拟器截图用：启动参数 -debugOpen <会话id> / -debugSend <文字> / -debugShow list|settings|typing
+            // 模拟器截图用：启动参数 -debugOpen <会话id> / -debugSend <文字> / -debugShow list|archive|settings|typing
             let defaults = UserDefaults.standard
             if let id = defaults.string(forKey: "debugOpen") { store.open(id) }
             if let text = defaults.string(forKey: "debugSend") { store.send(text) }
             switch defaults.string(forKey: "debugShow") {
             case "list": showList = true
+            case "archive":
+                listStartsArchived = true
+                showList = true
             case "settings": showSettings = true
             case "typing": typing = true
             default: break
@@ -93,15 +97,6 @@ struct ChatView: View {
                 .font(Pip.label(19, weight: .heavy))
                 .lineLimit(1)
             Rectangle().fill(Pip.text).frame(height: 2).glow()
-            Button {
-                Pip.play(.key)
-                voice.end()
-                store.newChat()
-                typing = false
-            } label: {
-                Image(systemName: "plus").font(.system(size: 22, weight: .bold))
-            }
-            .accessibilityLabel("新对话")
             Button {
                 Pip.play(.key)
                 showSettings = true
@@ -281,17 +276,19 @@ struct ChatView: View {
                 Spacer()
                 Button {
                     Pip.play(.key)
-                    showList = true
+                    voice.end()
+                    store.newChat()
                 } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "text.bubble").font(.system(size: 22))
-                        Text("\(store.sortedConversations.count)").font(Pip.label(16, weight: .heavy))
+                    HStack(spacing: 4) {
+                        Image(systemName: "plus").font(.system(size: 22, weight: .bold))
+                        Text("新对话").font(Pip.label(15, weight: .heavy))
                     }
                     .frame(width: 90, height: 60, alignment: .trailing)
                 }
-                .foregroundStyle(Pip.text)
-                .glow()
-                .accessibilityLabel("会话列表")
+                .foregroundStyle(store.currentID == nil ? Pip.dim : Pip.text)
+                .glow(store.currentID != nil)
+                .disabled(store.currentID == nil)
+                .accessibilityLabel("新对话")
             }
             .padding(.horizontal, 22)
             // 离屏幕底边远一点：贴近底边的触摸会被系统的主屏手势延迟识别，按下会慢半拍。

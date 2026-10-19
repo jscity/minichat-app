@@ -30,7 +30,7 @@ python3 tools/make_sounds.py                      # 重新生成音效
 swift tools/make_icon.swift Sources/Assets.xcassets/AppIcon.appiconset/icon.png   # 重新生成图标
 ```
 
-模拟器调试（仅 Debug 构建）：启动参数 `-debugOpen <会话id>`、`-debugSend <文字>`、`-debugShow list|settings|typing`；服务器地址和 token 用 `xcrun simctl spawn <设备> defaults write com.xtvv.minichat serverURL|token …` 写入。
+模拟器调试（仅 Debug 构建）：启动参数 `-debugOpen <会话id>`、`-debugSend <文字>`、`-debugShow list|archive|settings|typing`；服务器地址和 token 用 `xcrun simctl spawn <设备> defaults write com.xtvv.minichat serverURL|token …` 写入。
 
 ## 测速（bench）
 

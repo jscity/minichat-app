@@ -8,6 +8,8 @@ final class ChatStore {
     enum Connection: Equatable { case unknown, online, offline, unauthorized, notConfigured }
 
     private(set) var conversations: [Conversation] = []
+    /// 已归档的会话，打开归档列表时向服务器拉取。
+    private(set) var archived: [Conversation] = []
     private(set) var messages: [String: [Message]] = [:]
     private(set) var tiers: [Tier] = [Tier(id: "fast", label: "快速", model: "")]
     private(set) var defaultTier = "fast"
@@ -63,7 +65,7 @@ final class ChatStore {
 
     // MARK: 视图用
 
-    var current: Conversation? { currentID.flatMap { id in conversations.first { $0.id == id } } }
+    var current: Conversation? { currentID.flatMap { id in conversations.first { $0.id == id } ?? archived.first { $0.id == id } } }
     var currentMessages: [Message] { currentID.flatMap { messages[$0] } ?? [] }
     var currentTier: String { current?.tier ?? draftTier }
     var sortedConversations: [Conversation] {
@@ -182,11 +184,44 @@ final class ChatStore {
 
     func archive(_ id: String) {
         update(id, fields: ["archived": true]) { $0.archived = true }
+        if let conversation = conversations.first(where: { $0.id == id }), !archived.contains(where: { $0.id == id }) {
+            archived.insert(conversation, at: 0)
+        }
         if currentID == id { newChat() }
+    }
+
+    func loadArchived() async {
+        guard let client else { return }
+        do {
+            let list: ConversationList = try await client.get("/api/conversations?archived=1&limit=200")
+            archived = list.items
+        } catch {
+            handle(error)
+        }
+    }
+
+    func unarchive(_ id: String) {
+        guard var conversation = archived.first(where: { $0.id == id }) else { return }
+        archived.removeAll { $0.id == id }
+        conversation.archived = false
+        upsert(conversation)
+        save()
+        guard let client else { return }
+        Task {
+            do {
+                let updated: Conversation = try await client.call("PATCH", "/api/conversations/\(id)", body: ["archived": false])
+                upsert(updated)
+                save()
+            } catch {
+                handle(error)
+                await refresh()
+            }
+        }
     }
 
     func delete(_ id: String) {
         conversations.removeAll { $0.id == id }
+        archived.removeAll { $0.id == id }
         messages[id] = nil
         if currentID == id { newChat() }
         save()
