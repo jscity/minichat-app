@@ -4,7 +4,7 @@
 
 - 项目目标、范围和开发约定：[CLAUDE.md](CLAUDE.md)
 - 决策记录与旧系统数据：[docs/decisions.md](docs/decisions.md)
-- 接口与数据结构草案：[docs/api.md](docs/api.md)
+- 接口与数据结构：[docs/api.md](docs/api.md)
 
 ## 测速（bench）
 
